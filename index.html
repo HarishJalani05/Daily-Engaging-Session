@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Classroom WhatsApp Update Generator</title>
+  <meta name="description" content="Automate daily classroom engaging session updates for school teachers and share directly to WhatsApp.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Background Glow FX -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Header Navigation -->
+  <header class="app-header">
+    <div class="header-container container">
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="book-open-check"></i>
+        </div>
+        <div>
+          <h1>Class Engage</h1>
+          <p class="brand-sub">Daily Classroom WhatsApp Generator</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="guidedVoiceBtn" class="btn btn-primary pulse-btn">
+          <i data-lucide="mic"></i>
+          <span>Guided Voice Mode</span>
+        </button>
+        <button id="manageSubjectsBtn" class="btn btn-secondary" title="Manage Subjects">
+          <i data-lucide="settings-2"></i>
+          <span class="desktop-only">Subjects</span>
+        </button>
+        <button id="themeToggleBtn" class="btn btn-icon" title="Toggle Light/Dark Theme">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content container">
+
+    <!-- Top Info Bar: Date, Day & Quick Status -->
+    <section class="card date-card">
+      <div class="date-header">
+        <div class="date-inputs-group">
+          <div class="input-badge">
+            <i data-lucide="calendar"></i>
+            <label for="dateInput">Session Date:</label>
+            <input type="date" id="dateInput" class="date-picker-native" title="Click to select session date from calendar">
+          </div>
+          <div class="input-badge">
+            <i data-lucide="clock"></i>
+            <label for="dayInput">Day:</label>
+            <input type="text" id="dayInput" class="day-picker-text" placeholder="e.g. Friday" readonly title="Automatically updated based on selected date">
+          </div>
+        </div>
+        <div class="quick-presets">
+          <button id="todayBtn" class="btn-chip active"><i data-lucide="sparkles"></i> Today</button>
+          <button id="tomorrowBtn" class="btn-chip"><i data-lucide="calendar-plus"></i> Tomorrow</button>
+          <button id="resetFormBtn" class="btn-chip btn-chip-danger"><i data-lucide="rotate-ccw"></i> Reset All</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid: Form Left, Preview Right -->
+    <div class="app-grid">
+      
+      <!-- Left Column: Form Inputs -->
+      <div class="form-column">
+        
+        <!-- Guided Voice Callout banner -->
+        <div class="voice-banner">
+          <div class="voice-banner-info">
+            <div class="voice-wave-icon">
+              <i data-lucide="volume-2"></i>
+            </div>
+            <div>
+              <h3>Voice Automation Active</h3>
+              <p>Click any <i data-lucide="mic" style="width: 14px; display: inline;"></i> icon to dictate. Say <strong>"Kuch nahi"</strong> or <strong>"Skip"</strong> to leave a subject blank.</p>
+            </div>
+          </div>
+          <button id="startWizardBannerBtn" class="btn btn-sm btn-accent">
+            <i data-lucide="play-circle"></i> Start Auto Assistant
+          </button>
+        </div>
+
+        <!-- Section: Classwork -->
+        <section class="card section-card">
+          <div class="section-title-bar">
+            <div class="section-title">
+              <i data-lucide="notebook-pen" class="text-emerald"></i>
+              <h2>Classwork Updates</h2>
+            </div>
+            <span class="badge badge-emerald">Fixed Subjects</span>
+          </div>
+
+          <div id="classworkContainer" class="subject-fields-list">
+            <!-- Dynamically Rendered Subjects -->
+          </div>
+        </section>
+
+        <!-- Section: Homework -->
+        <section class="card section-card">
+          <div class="section-title-bar">
+            <div class="section-title">
+              <i data-lucide="book-marked" class="text-purple"></i>
+              <h2>Homework Updates</h2>
+            </div>
+            <span class="badge badge-purple">Fixed Subjects</span>
+          </div>
+
+          <div id="homeworkContainer" class="subject-fields-list">
+            <!-- Dynamically Rendered Homework Subjects -->
+          </div>
+        </section>
+
+        <!-- Section: Hindi Virtual Keyboard Toolbar -->
+        <section class="card hindi-keyboard-card">
+          <div class="section-title-bar">
+            <div class="section-title">
+              <i data-lucide="languages" class="text-orange"></i>
+              <h2>Hindi Akshar Quick Keyboard (हिंदी अक्षर)</h2>
+            </div>
+            <button id="toggleHindiKbdBtn" class="btn-link">
+              <span id="hindiKbdToggleText">Hide Keyboard</span>
+              <i data-lucide="chevron-down" id="hindiKbdIcon"></i>
+            </button>
+          </div>
+
+          <div id="hindiKeyboardBody" class="hindi-keyboard-body">
+            <p class="hindi-tip"><i data-lucide="info"></i> Click any letter or group below to insert directly into your current focused input field:</p>
+            
+            <!-- Quick Combinations -->
+            <div class="hindi-group-label">Quick Phrases & Ranges</div>
+            <div class="hindi-keys-row">
+              <button class="hindi-key key-pill" data-insert="अ-अः">अ-अः (Akshar Range)</button>
+              <button class="hindi-key key-pill" data-insert="क-ज्ञ">क-ज्ञ (Vyanjan Range)</button>
+              <button class="hindi-key key-pill" data-insert="स्वर अ-अः">स्वर अ-अः</button>
+              <button class="hindi-key key-pill" data-insert="व्यंजन क-ज्ञ">व्यंजन क-ज्ञ</button>
+              <button class="hindi-key key-pill" data-insert="Hindi Dictation">Hindi Dictation</button>
+            </div>
+
+            <!-- Vowels (Swar) -->
+            <div class="hindi-group-label">Vowels (स्वर)</div>
+            <div class="hindi-keys-grid">
+              <button class="hindi-key" data-insert="अ">अ</button>
+              <button class="hindi-key" data-insert="आ">आ</button>
+              <button class="hindi-key" data-insert="इ">इ</button>
+              <button class="hindi-key" data-insert="ई">ई</button>
+              <button class="hindi-key" data-insert="उ">उ</button>
+              <button class="hindi-key" data-insert="ऊ">ऊ</button>
+              <button class="hindi-key" data-insert="ऋ">ऋ</button>
+              <button class="hindi-key" data-insert="ए">ए</button>
+              <button class="hindi-key" data-insert="ऐ">ऐ</button>
+              <button class="hindi-key" data-insert="ओ">ओ</button>
+              <button class="hindi-key" data-insert="औ">औ</button>
+              <button class="hindi-key" data-insert="अं">अं</button>
+              <button class="hindi-key" data-insert="अः">अः</button>
+            </div>
+
+            <!-- Common Vyanjan -->
+            <div class="hindi-group-label">Common Consonants (व्यंजन)</div>
+            <div class="hindi-keys-grid">
+              <button class="hindi-key" data-insert="क">क</button>
+              <button class="hindi-key" data-insert="ख">ख</button>
+              <button class="hindi-key" data-insert="ग">ग</button>
+              <button class="hindi-key" data-insert="घ">घ</button>
+              <button class="hindi-key" data-insert="च">च</button>
+              <button class="hindi-key" data-insert="छ">छ</button>
+              <button class="hindi-key" data-insert="ज">ज</button>
+              <button class="hindi-key" data-insert="झ">झ</button>
+              <button class="hindi-key" data-insert="ट">ट</button>
+              <button class="hindi-key" data-insert="ठ">ठ</button>
+              <button class="hindi-key" data-insert="ड">ड</button>
+              <button class="hindi-key" data-insert="ढ">ढ</button>
+              <button class="hindi-key" data-insert="त">त</button>
+              <button class="hindi-key" data-insert="थ">थ</button>
+              <button class="hindi-key" data-insert="द">द</button>
+              <button class="hindi-key" data-insert="ध">ध</button>
+              <button class="hindi-key" data-insert="न">न</button>
+              <button class="hindi-key" data-insert="प">प</button>
+              <button class="hindi-key" data-insert="फ">फ</button>
+              <button class="hindi-key" data-insert="ब">ब</button>
+              <button class="hindi-key" data-insert="भ">भ</button>
+              <button class="hindi-key" data-insert="म">म</button>
+              <button class="hindi-key" data-insert="य">य</button>
+              <button class="hindi-key" data-insert="र">र</button>
+              <button class="hindi-key" data-insert="ल">ल</button>
+              <button class="hindi-key" data-insert="व">व</button>
+              <button class="hindi-key" data-insert="श">श</button>
+              <button class="hindi-key" data-insert="ष">ष</button>
+              <button class="hindi-key" data-insert="स">स</button>
+              <button class="hindi-key" data-insert="ह">ह</button>
+              <button class="hindi-key" data-insert="क्ष">क्ष</button>
+              <button class="hindi-key" data-insert="त्र">त्र</button>
+              <button class="hindi-key" data-insert="ज्ञ">ज्ञ</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Special Announcements / Celebrations -->
+        <section class="card section-card">
+          <div class="section-title-bar">
+            <div class="section-title">
+              <i data-lucide="party-popper" class="text-amber"></i>
+              <h2>Special Celebration / Dictation Notice</h2>
+            </div>
+          </div>
+
+          <div class="special-chips">
+            <span class="chip-label">Quick Add:</span>
+            <button class="chip-btn" data-insert="Today celebration of Friendship Day was conducted in class. On Monday, there will be dictation of Hindi Akshar अ-अः">
+              🎉 Friendship Day + Hindi Dictation
+            </button>
+            <button class="chip-btn" data-insert="On Monday, there will be dictation of Hindi Akshar अ-अः">
+              📝 Hindi Dictation Notice
+            </button>
+            <button class="chip-btn" data-insert="On Monday, there will be Maths oral numbers test 1-50">
+              🔢 Maths Test Notice
+            </button>
+            <button class="chip-btn" data-insert="Kindly send clean hand napkin and water bottle daily in school bag.">
+              🎒 Hygiene Reminder
+            </button>
+          </div>
+
+          <div class="input-with-mic textarea-mic-wrapper">
+            <textarea id="specialNotesInput" rows="3" placeholder="Enter special announcements, celebration details, or dictation alerts..."></textarea>
+            <button class="mic-btn text-area-mic" data-target="specialNotesInput" title="Speak Announcement">
+              <i data-lucide="mic"></i>
+            </button>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Right Column: WhatsApp Live Preview & Share -->
+      <div class="preview-column">
+        <div class="sticky-preview-wrapper">
+          <div class="card preview-card">
+            
+            <div class="preview-header">
+              <div class="preview-title">
+                <i data-lucide="message-square" class="text-whatsapp"></i>
+                <h2>WhatsApp Live Preview</h2>
+              </div>
+              <span class="live-indicator"><span class="pulse-dot"></span> Formatting Ready</span>
+            </div>
+
+            <div class="whatsapp-bubble">
+              <div class="whatsapp-header-strip">
+                <i data-lucide="share-2"></i> Class WhatsApp Group Message
+              </div>
+              <pre id="whatsappFormattedText" class="whatsapp-text-content"></pre>
+              <div class="whatsapp-footer-strip">
+                <span id="previewTimestamp">Today at 10:00 AM</span>
+                <i data-lucide="check-check" class="text-whatsapp"></i>
+              </div>
+            </div>
+
+            <!-- Primary Action Buttons -->
+            <div class="preview-actions">
+              <button id="shareWhatsappBtn" class="btn btn-whatsapp btn-lg full-width">
+                <i data-lucide="send"></i>
+                <span>Share to WhatsApp Group</span>
+              </button>
+
+              <div class="action-row">
+                <button id="copyTextBtn" class="btn btn-secondary full-width">
+                  <i data-lucide="copy"></i>
+                  <span>Copy Text</span>
+                </button>
+                <button id="previewVoiceReadBtn" class="btn btn-secondary" title="Read Aloud Message">
+                  <i data-lucide="volume-2"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Helper Tip -->
+            <div class="share-tip">
+              <i data-lucide="shield-check"></i> 
+              Directly opens WhatsApp app on mobile or WhatsApp Web on desktop with pre-filled text!
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Guided Voice Assistant Modal -->
+  <div id="voiceModal" class="modal-overlay hidden">
+    <div class="modal-content voice-modal-box">
+      <button class="modal-close" id="closeVoiceModalBtn"><i data-lucide="x"></i></button>
+
+      <div class="voice-wizard-header">
+        <div class="wizard-step-badge" id="wizardStepCount">Subject 1 of 6</div>
+        <h2 id="wizardSubjectTitle">Maths Notebook</h2>
+        <p id="wizardFieldType" class="text-muted">Classwork</p>
+      </div>
+
+      <div class="voice-anim-container">
+        <div class="mic-wave-ring ring-1"></div>
+        <div class="mic-wave-ring ring-2"></div>
+        <div class="mic-wizard-circle" id="wizardMicCircle">
+          <i data-lucide="mic" id="wizardMicIcon"></i>
+        </div>
+      </div>
+
+      <div class="wizard-status-box">
+        <p class="status-heading" id="wizardStatusHeading">Listening...</p>
+        <p class="speech-result-preview" id="wizardSpeechTranscript">Speak now, or say "Kuch Nahi" to skip...</p>
+      </div>
+
+      <div class="wizard-actions">
+        <button id="wizardSkipBtn" class="btn btn-secondary">
+          <i data-lucide="skip-forward"></i> Skip (Kuch Nahi)
+        </button>
+        <button id="wizardNextBtn" class="btn btn-primary">
+          <i data-lucide="arrow-right"></i> Next Subject
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Subjects Modal -->
+  <div id="subjectsModal" class="modal-overlay hidden">
+    <div class="modal-content subjects-modal-box">
+      <div class="modal-header">
+        <h2>Manage Fixed Subjects</h2>
+        <button class="modal-close" id="closeSubjectsModalBtn"><i data-lucide="x"></i></button>
+      </div>
+      
+      <p class="text-muted">Customize your daily classroom subject list. Changes are saved automatically.</p>
+
+      <div class="add-subject-row">
+        <input type="text" id="newSubjectInput" placeholder="Enter new subject name (e.g. English Reader)...">
+        <button id="addSubjectBtn" class="btn btn-primary"><i data-lucide="plus"></i> Add</button>
+      </div>
+
+      <div class="subjects-manage-list" id="manageSubjectsList">
+        <!-- Rendered subjects list with delete buttons -->
+      </div>
+
+      <div class="modal-footer">
+        <button id="restoreDefaultSubjectsBtn" class="btn-link text-danger">Restore Defaults</button>
+        <button id="saveSubjectsDoneBtn" class="btn btn-primary">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Application Script -->
+  <script src="app.js"></script>
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>
