@@ -66,6 +66,7 @@ const shareWhatsappBtn = document.getElementById('shareWhatsappBtn');
 const copyTextBtn = document.getElementById('copyTextBtn');
 const previewVoiceReadBtn = document.getElementById('previewVoiceReadBtn');
 const resetFormBtn = document.getElementById('resetFormBtn');
+const yesterdayBtn = document.getElementById('yesterdayBtn');
 const todayBtn = document.getElementById('todayBtn');
 const tomorrowBtn = document.getElementById('tomorrowBtn');
 const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -115,11 +116,11 @@ function initializeDateAndDay(dateObj = new Date()) {
   const dd = String(dateObj.getDate()).padStart(2, '0');
   const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
   const yyyy = dateObj.getFullYear();
-  
+
   // Format for HTML5 <input type="date"> (YYYY-MM-DD)
   dateInput.value = `${yyyy}-${mm}-${dd}`;
   dayInput.value = dayNames[dateObj.getDay()];
-  
+
   // Set preview timestamp
   const hours = dateObj.getHours();
   const minutes = String(dateObj.getMinutes()).padStart(2, '0');
@@ -225,7 +226,7 @@ function createSubjectRow(subjectName, fieldId, type, initialValue) {
 function getFormattedWhatsAppString() {
   const rawDate = dateInput.value.trim();
   let dateFormatted = rawDate;
-  
+
   if (rawDate && rawDate.includes('-')) {
     const parts = rawDate.split('-');
     if (parts.length === 3) {
@@ -312,11 +313,11 @@ function updateWhatsAppPreview() {
       if (val) {
         const line = document.createElement('div');
         line.className = 'preview-subject-line';
-        
+
         const textSpan = document.createElement('span');
         textSpan.className = 'preview-subject-text';
         textSpan.innerText = `* ${subj}: ${val}`;
-        
+
         const delBtn = document.createElement('button');
         delBtn.className = 'preview-line-delete-btn';
         delBtn.title = `Delete ${subj} Classwork from preview`;
@@ -350,11 +351,11 @@ function updateWhatsAppPreview() {
       if (val) {
         const line = document.createElement('div');
         line.className = 'preview-subject-line';
-        
+
         const textSpan = document.createElement('span');
         textSpan.className = 'preview-subject-text';
         textSpan.innerText = `* ${subj}: ${val}`;
-        
+
         const delBtn = document.createElement('button');
         delBtn.className = 'preview-line-delete-btn';
         delBtn.title = `Delete ${subj} Homework from preview`;
@@ -432,7 +433,7 @@ function setupSpeechRecognition() {
     for (let i = event.resultIndex; i < event.results.length; i++) {
       transcript += event.results[i][0].transcript;
     }
-    
+
     transcript = transcript.trim();
 
     if (isWizardRunning) {
@@ -674,7 +675,7 @@ function insertTextAtCursor(text) {
   // Insert space if appending
   const spaceBefore = (start > 0 && val[start - 1] !== ' ') ? ' ' : '';
   const newContent = val.substring(0, start) + spaceBefore + text + val.substring(end);
-  
+
   el.value = newContent;
   el.selectionStart = el.selectionEnd = start + spaceBefore.length + text.length;
   el.focus();
@@ -729,22 +730,46 @@ function setupEventListeners() {
     });
   });
 
-  // Date Quick Chips
-  todayBtn.addEventListener('click', () => {
-    initializeDateAndDay(new Date());
+  // Date Quick Chips (Yesterday, Today, Tomorrow)
+  const setQuickDate = (dateObj, activeBtn) => {
+    initializeDateAndDay(dateObj);
     updateWhatsAppPreview();
-    todayBtn.classList.add('active');
-    tomorrowBtn.classList.remove('active');
-  });
+    const yesterdayBtnEl = document.getElementById('yesterdayBtn');
+    const todayBtnEl = document.getElementById('todayBtn');
+    const tomorrowBtnEl = document.getElementById('tomorrowBtn');
+    [yesterdayBtnEl, todayBtnEl, tomorrowBtnEl].forEach(btn => {
+      if (btn) btn.classList.remove('active');
+    });
+    if (activeBtn) activeBtn.classList.add('active');
+  };
 
-  tomorrowBtn.addEventListener('click', () => {
-    const tom = new Date();
-    tom.setDate(tom.getDate() + 1);
-    initializeDateAndDay(tom);
-    updateWhatsAppPreview();
-    tomorrowBtn.classList.add('active');
-    todayBtn.classList.remove('active');
-  });
+  const yesterdayBtn = document.getElementById('yesterdayBtn');
+  if (yesterdayBtn) {
+    yesterdayBtn.addEventListener('click', () => {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      setQuickDate(d, yesterdayBtn);
+      showToast("Set date to Yesterday");
+    });
+  }
+
+  const todayBtn = document.getElementById('todayBtn');
+  if (todayBtn) {
+    todayBtn.addEventListener('click', () => {
+      setQuickDate(new Date(), todayBtn);
+      showToast("Set date to Today");
+    });
+  }
+
+  const tomorrowBtn = document.getElementById('tomorrowBtn');
+  if (tomorrowBtn) {
+    tomorrowBtn.addEventListener('click', () => {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      setQuickDate(d, tomorrowBtn);
+      showToast("Set date to Tomorrow");
+    });
+  }
 
   resetFormBtn.addEventListener('click', () => {
     if (confirm("Reset today's classwork and homework entries?")) {
@@ -792,7 +817,7 @@ function setupEventListeners() {
     const text = getFormattedWhatsAppString();
     const encoded = encodeURIComponent(text);
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encoded}`;
-    
+
     // Attempt Web Share API first on mobile devices
     if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
       navigator.share({
@@ -841,10 +866,12 @@ function setupEventListeners() {
   if (clearPreviewHeaderBtn) clearPreviewHeaderBtn.addEventListener('click', clearPreviewAction);
 
   // Read Aloud Preview Text
-  previewVoiceReadBtn.addEventListener('click', () => {
-    const text = whatsappFormattedText.innerText.replace(/\*/g, '');
-    speakPrompt(text);
-  });
+  if (previewVoiceReadBtn) {
+    previewVoiceReadBtn.addEventListener('click', () => {
+      const text = getFormattedWhatsAppString().replace(/\*/g, '');
+      speakPrompt(text);
+    });
+  }
 
   // Theme Toggle
   themeToggleBtn.addEventListener('click', () => {
@@ -906,7 +933,7 @@ function renderManageSubjectsList() {
   if (window.lucide) lucide.createIcons();
 }
 
-window.deleteSubject = function(idx) {
+window.deleteSubject = function (idx) {
   if (subjects.length <= 1) {
     showToast("Must have at least one subject.");
     return;
@@ -925,7 +952,7 @@ function showToast(message) {
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.innerHTML = `<i data-lucide="check-circle-2" style="width: 18px;"></i> ${message}`;
-  
+
   container.appendChild(toast);
   if (window.lucide) lucide.createIcons();
 

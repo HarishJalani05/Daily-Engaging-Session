@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daily Classroom WhatsApp Update Generator</title>
-  <meta name="description" content="Automate daily classroom engaging session updates for school teachers and share directly to WhatsApp.">
-  
+  <meta name="description"
+    content="Automate daily classroom engaging session updates for school teachers and share directly to WhatsApp.">
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
+
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  
+
   <!-- Custom CSS -->
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
   <!-- Background Glow FX -->
@@ -62,15 +67,18 @@
           <div class="input-badge">
             <i data-lucide="calendar"></i>
             <label for="dateInput">Session Date:</label>
-            <input type="date" id="dateInput" class="date-picker-native" title="Click to select session date from calendar">
+            <input type="date" id="dateInput" class="date-picker-native"
+              title="Click to select session date from calendar">
           </div>
           <div class="input-badge">
             <i data-lucide="clock"></i>
             <label for="dayInput">Day:</label>
-            <input type="text" id="dayInput" class="day-picker-text" placeholder="e.g. Friday" readonly title="Automatically updated based on selected date">
+            <input type="text" id="dayInput" class="day-picker-text" placeholder="e.g. Friday" readonly
+              title="Automatically updated based on selected date">
           </div>
         </div>
         <div class="quick-presets">
+          <button id="yesterdayBtn" class="btn-chip"><i data-lucide="calendar-minus"></i> Yesterday</button>
           <button id="todayBtn" class="btn-chip active"><i data-lucide="sparkles"></i> Today</button>
           <button id="tomorrowBtn" class="btn-chip"><i data-lucide="calendar-plus"></i> Tomorrow</button>
           <button id="resetFormBtn" class="btn-chip btn-chip-danger"><i data-lucide="rotate-ccw"></i> Reset All</button>
@@ -80,10 +88,10 @@
 
     <!-- Main Grid: Form Left, Preview Right -->
     <div class="app-grid">
-      
+
       <!-- Left Column: Form Inputs -->
       <div class="form-column">
-        
+
         <!-- Guided Voice Callout banner -->
         <div class="voice-banner">
           <div class="voice-banner-info">
@@ -92,7 +100,9 @@
             </div>
             <div>
               <h3>Voice Automation Active</h3>
-              <p>Click any <i data-lucide="mic" style="width: 14px; display: inline;"></i> icon to dictate. Say <strong>"Kuch nahi"</strong> or <strong>"Skip"</strong> to leave a subject blank.</p>
+              <p>Click any <i data-lucide="mic" style="width: 14px; display: inline;"></i> icon to dictate. Say
+                <strong>"Kuch nahi"</strong> or <strong>"Skip"</strong> to leave a subject blank.
+              </p>
             </div>
           </div>
           <button id="startWizardBannerBtn" class="btn btn-sm btn-accent">
@@ -144,8 +154,9 @@
           </div>
 
           <div id="hindiKeyboardBody" class="hindi-keyboard-body">
-            <p class="hindi-tip"><i data-lucide="info"></i> Click any letter or group below to insert directly into your current focused input field:</p>
-            
+            <p class="hindi-tip"><i data-lucide="info"></i> Click any letter or group below to insert directly into your
+              current focused input field:</p>
+
             <!-- Quick Combinations -->
             <div class="hindi-group-label">Quick Phrases & Ranges</div>
             <div class="hindi-keys-row">
@@ -225,7 +236,8 @@
 
           <div class="special-chips">
             <span class="chip-label">Quick Add:</span>
-            <button class="chip-btn" data-insert="Today celebration of Friendship Day was conducted in class. On Monday, there will be dictation of Hindi Akshar अ-अः">
+            <button class="chip-btn"
+              data-insert="Today celebration of Friendship Day was conducted in class. On Monday, there will be dictation of Hindi Akshar अ-अः">
               🎉 Friendship Day + Hindi Dictation
             </button>
             <button class="chip-btn" data-insert="On Monday, there will be dictation of Hindi Akshar अ-अः">
@@ -240,9 +252,11 @@
           </div>
 
           <div class="input-with-mic textarea-mic-wrapper">
-            <textarea id="specialNotesInput" rows="3" placeholder="Enter special announcements, celebration details, or dictation alerts..."></textarea>
+            <textarea id="specialNotesInput" rows="3"
+              placeholder="Enter special announcements, celebration details, or dictation alerts..."></textarea>
             <div class="input-actions-inside text-area-actions">
-              <button id="clearSpecialNotesBtn" class="clear-field-btn" title="Clear announcement"><i data-lucide="x"></i></button>
+              <button id="clearSpecialNotesBtn" class="clear-field-btn" title="Clear announcement"><i
+                  data-lucide="x"></i></button>
               <button class="mic-btn text-area-mic" data-target="specialNotesInput" title="Speak Announcement">
                 <i data-lucide="mic"></i>
               </button>
@@ -256,7 +270,7 @@
       <div class="preview-column">
         <div class="sticky-preview-wrapper">
           <div class="card preview-card">
-            
+
             <div class="preview-header">
               <div class="preview-title">
                 <i data-lucide="message-square" class="text-whatsapp"></i>
@@ -296,7 +310,7 @@
 
             <!-- Helper Tip -->
             <div class="share-tip">
-              <i data-lucide="shield-check"></i> 
+              <i data-lucide="shield-check"></i>
               Directly opens WhatsApp app on mobile or WhatsApp Web on desktop with pre-filled text!
             </div>
 
@@ -349,7 +363,7 @@
         <h2>Manage Fixed Subjects</h2>
         <button class="modal-close" id="closeSubjectsModalBtn"><i data-lucide="x"></i></button>
       </div>
-      
+
       <p class="text-muted">Customize your daily classroom subject list. Changes are saved automatically.</p>
 
       <div class="add-subject-row">
@@ -378,4 +392,5 @@
     lucide.createIcons();
   </script>
 </body>
+
 </html>
