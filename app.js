@@ -17,6 +17,7 @@ let subjects = [];
 let classworkData = {};
 let homeworkData = {};
 let activeInputField = null;
+let existingInputValue = '';
 let currentTheme = 'light';
 
 // Web Speech Objects
@@ -32,8 +33,9 @@ const dateInput = document.getElementById('dateInput');
 const dayInput = document.getElementById('dayInput');
 const classworkContainer = document.getElementById('classworkContainer');
 const homeworkContainer = document.getElementById('homeworkContainer');
-const specialNotesInput = document.getElementById('specialNotesInput');
-const whatsappFormattedText = document.getElementById('whatsappFormattedText');
+const celebrationsInput = document.getElementById('celebrationsInput');
+const dictationsExamsInput = document.getElementById('dictationsExamsInput');
+const whatsappPreviewContainer = document.getElementById('whatsappPreviewContainer');
 const previewTimestamp = document.getElementById('previewTimestamp');
 
 // Navigation & Modals
@@ -235,7 +237,8 @@ function getFormattedWhatsAppString() {
   }
 
   const dayVal = dayInput.value.trim();
-  const specialNotesVal = specialNotesInput.value.trim();
+  const celebrationsVal = celebrationsInput ? celebrationsInput.value.trim() : '';
+  const dictationsExamsVal = dictationsExamsInput ? dictationsExamsInput.value.trim() : '';
 
   let message = `*Today's Engaging Session in the classroom:*\n${dateFormatted}\n${dayVal}\n \n`;
 
@@ -263,8 +266,16 @@ function getFormattedWhatsAppString() {
     message += `*Homework:*\n${activeHomework.join('\n')}\n\n`;
   }
 
-  if (specialNotesVal) {
-    message += `*${specialNotesVal}*`;
+  if (celebrationsVal) {
+    message += `*${celebrationsVal}*`;
+  }
+
+  if (dictationsExamsVal) {
+    if (celebrationsVal) {
+      message += `\n\n*${dictationsExamsVal}*`; // One line gap between celebrations and dictation/exams
+    } else {
+      message += `*${dictationsExamsVal}*`;
+    }
   }
 
   return message.trim();
@@ -375,24 +386,49 @@ function updateWhatsAppPreview() {
     });
   }
 
-  // Special Notes Section
-  if (specialNotesVal) {
+  // Special Celebrations & Events Section
+  if (celebrationsVal) {
     const notesDiv = document.createElement('div');
     notesDiv.className = 'preview-subject-line';
     notesDiv.style.marginTop = '0.5rem';
 
     const textSpan = document.createElement('span');
     textSpan.className = 'preview-subject-text';
-    textSpan.innerText = `*${specialNotesVal}*`;
+    textSpan.innerText = `*${celebrationsVal}*`;
 
     const delBtn = document.createElement('button');
     delBtn.className = 'preview-line-delete-btn';
-    delBtn.title = 'Delete announcement from preview';
+    delBtn.title = 'Delete celebration from preview';
     delBtn.innerHTML = `<i data-lucide="x" style="width: 13px; height: 13px;"></i>`;
     delBtn.addEventListener('click', () => {
-      specialNotesInput.value = '';
+      celebrationsInput.value = '';
       updateWhatsAppPreview();
-      showToast('Deleted announcement');
+      showToast('Deleted celebration');
+    });
+
+    notesDiv.appendChild(textSpan);
+    notesDiv.appendChild(delBtn);
+    container.appendChild(notesDiv);
+  }
+
+  // Dictation Notices & Upcoming Exams Section (with gap if celebrations present)
+  if (dictationsExamsVal) {
+    const notesDiv = document.createElement('div');
+    notesDiv.className = 'preview-subject-line';
+    notesDiv.style.marginTop = celebrationsVal ? '1rem' : '0.5rem';
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'preview-subject-text';
+    textSpan.innerText = `*${dictationsExamsVal}*`;
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'preview-line-delete-btn';
+    delBtn.title = 'Delete dictation/exam notice from preview';
+    delBtn.innerHTML = `<i data-lucide="x" style="width: 13px; height: 13px;"></i>`;
+    delBtn.addEventListener('click', () => {
+      dictationsExamsInput.value = '';
+      updateWhatsAppPreview();
+      showToast('Deleted dictation/exam notice');
     });
 
     notesDiv.appendChild(textSpan);
@@ -439,7 +475,17 @@ function setupSpeechRecognition() {
     if (isWizardRunning) {
       wizardSpeechTranscript.innerText = `"${transcript}"`;
     } else if (activeInputField) {
-      activeInputField.value = formatDictatedText(transcript);
+      const newFormattedText = formatDictatedText(transcript);
+      if (existingInputValue) {
+        let appendText = newFormattedText;
+        // Don't force uppercase if appending after existing text
+        if (appendText.length > 0 && /^[A-Z]/.test(appendText) && !/^\d/.test(appendText)) {
+          appendText = appendText.charAt(0).toLowerCase() + appendText.slice(1);
+        }
+        activeInputField.value = `${existingInputValue} ${appendText}`;
+      } else {
+        activeInputField.value = newFormattedText;
+      }
       // Dispatch input event to update state
       activeInputField.dispatchEvent(new Event('input'));
     }
@@ -477,6 +523,7 @@ function triggerIndividualMic(inputElement, micBtn) {
   stopMic();
   activeInputField = inputElement;
   activeMicBtn = micBtn;
+  existingInputValue = inputElement ? inputElement.value.trim() : '';
 
   try {
     recognition.start();
@@ -524,7 +571,13 @@ function formatDictatedText(text) {
     return match;
   });
 
-  // 4. Capitalize first letter of string
+  // 4. Format spoken variations of 'akshar' / 'aksar' / 'akshara' / Devanagari 'अक्षर' to English spelling 'Akshar'
+  formatted = formatted.replace(/\b(?:akshar|aksar|akshara|अक्षर)\b/gi, 'Akshar');
+  formatted = formatted.replace(/\b(?:akshars|aksars|aksharas)\b/gi, 'Akshars');
+  formatted = formatted.replace(/\b(?:vyanjan|vyanjana)\b/gi, 'Vyanjan');
+  formatted = formatted.replace(/\b(?:swar|swara)\b/gi, 'Swar');
+
+  // 5. Capitalize first letter of string
   if (formatted.length > 0) {
     formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
   }
@@ -608,7 +661,16 @@ function processWizardSpeechResult(text) {
   } else {
     if (inputEl) {
       const formatted = formatDictatedText(text);
-      inputEl.value = formatted;
+      const prevVal = inputEl.value.trim();
+      if (prevVal) {
+        let appendText = formatted;
+        if (appendText.length > 0 && /^[A-Z]/.test(appendText) && !/^\d/.test(appendText)) {
+          appendText = appendText.charAt(0).toLowerCase() + appendText.slice(1);
+        }
+        inputEl.value = `${prevVal} ${appendText}`;
+      } else {
+        inputEl.value = formatted;
+      }
       inputEl.dispatchEvent(new Event('input'));
     }
     showToast(`Saved for ${currentStep.subj}`);
@@ -655,6 +717,7 @@ function setupHindiKeyboard() {
   document.querySelectorAll('.hindi-key').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       const insertText = btn.getAttribute('data-insert');
       insertTextAtCursor(insertText);
     });
@@ -672,13 +735,28 @@ function insertTextAtCursor(text) {
   const end = el.selectionEnd || 0;
   const val = el.value;
 
-  // Insert space if appending
-  const spaceBefore = (start > 0 && val[start - 1] !== ' ') ? ' ' : '';
+  // Insert space if appending word, but not for punctuation marks
+  const isPunctuation = /^[-&,.।:;()?!/"'+*]$/.test(text);
+  const spaceBefore = (!isPunctuation && start > 0 && val[start - 1] !== ' ') ? ' ' : '';
   const newContent = val.substring(0, start) + spaceBefore + text + val.substring(end);
+
+  // Preserve current scroll position before focus
+  const currentScrollY = window.scrollY;
 
   el.value = newContent;
   el.selectionStart = el.selectionEnd = start + spaceBefore.length + text.length;
-  el.focus();
+
+  // Focus without triggering smooth or jump scroll
+  if (typeof el.focus === 'function') {
+    try {
+      el.focus({ preventScroll: true });
+    } catch (err) {
+      el.focus();
+    }
+  }
+
+  // Restore scroll position to prevent browser scroll jump
+  window.scrollTo(0, currentScrollY);
 
   // Trigger input event
   el.dispatchEvent(new Event('input'));
@@ -700,33 +778,55 @@ function setupEventListeners() {
     }
     updateWhatsAppPreview();
   });
-  dateInput.addEventListener('input', updateWhatsAppPreview);
-  dayInput.addEventListener('input', updateWhatsAppPreview);
-  specialNotesInput.addEventListener('input', updateWhatsAppPreview);
-  specialNotesInput.addEventListener('focus', () => { activeInputField = specialNotesInput; });
-
-  // Special Notes Mic & Clear Buttons
-  const specialMicBtn = document.querySelector('.text-area-mic');
-  if (specialMicBtn) {
-    specialMicBtn.addEventListener('click', () => triggerIndividualMic(specialNotesInput, specialMicBtn));
+  if (celebrationsInput) {
+    celebrationsInput.addEventListener('input', updateWhatsAppPreview);
+    celebrationsInput.addEventListener('focus', () => { activeInputField = celebrationsInput; });
+  }
+  if (dictationsExamsInput) {
+    dictationsExamsInput.addEventListener('input', updateWhatsAppPreview);
+    dictationsExamsInput.addEventListener('focus', () => { activeInputField = dictationsExamsInput; });
   }
 
-  const clearSpecialNotesBtn = document.getElementById('clearSpecialNotesBtn');
-  if (clearSpecialNotesBtn) {
-    clearSpecialNotesBtn.addEventListener('click', () => {
-      specialNotesInput.value = '';
-      specialNotesInput.dispatchEvent(new Event('input'));
-      showToast('Cleared special announcement');
+  const clearCelebrationsBtn = document.getElementById('clearCelebrationsBtn');
+  if (clearCelebrationsBtn) {
+    clearCelebrationsBtn.addEventListener('click', () => {
+      celebrationsInput.value = '';
+      celebrationsInput.dispatchEvent(new Event('input'));
+      showToast('Cleared celebration entry');
     });
   }
 
-  // Quick Preset Chips
+  const clearDictationsExamsBtn = document.getElementById('clearDictationsExamsBtn');
+  if (clearDictationsExamsBtn) {
+    clearDictationsExamsBtn.addEventListener('click', () => {
+      dictationsExamsInput.value = '';
+      dictationsExamsInput.dispatchEvent(new Event('input'));
+      showToast('Cleared dictation/exam notice');
+    });
+  }
+
+  // Mic buttons targeting specific input via data-target
+  document.querySelectorAll('.text-area-mic').forEach(micBtn => {
+    micBtn.addEventListener('click', () => {
+      const targetId = micBtn.getAttribute('data-target');
+      const targetInput = document.getElementById(targetId);
+      if (targetInput) {
+        triggerIndividualMic(targetInput, micBtn);
+      }
+    });
+  });
+
+  // Quick Preset Chips (Target aware)
   document.querySelectorAll('.chip-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const preset = btn.getAttribute('data-insert');
-      specialNotesInput.value = preset;
-      specialNotesInput.dispatchEvent(new Event('input'));
-      showToast("Added preset note!");
+      const targetId = btn.getAttribute('data-target') || 'celebrationsInput';
+      const targetInput = document.getElementById(targetId);
+      if (targetInput) {
+        targetInput.value = preset;
+        targetInput.dispatchEvent(new Event('input'));
+        showToast("Added preset note!");
+      }
     });
   });
 
@@ -772,12 +872,13 @@ function setupEventListeners() {
   }
 
   resetFormBtn.addEventListener('click', () => {
-    if (confirm("Reset today's classwork and homework entries?")) {
+    if (confirm("Reset today's classwork, homework, and announcement entries?")) {
       subjects.forEach((_, idx) => {
         classworkData[`subj_${idx}`] = '';
         homeworkData[`subj_${idx}`] = '';
       });
-      specialNotesInput.value = '';
+      if (celebrationsInput) celebrationsInput.value = '';
+      if (dictationsExamsInput) dictationsExamsInput.value = '';
       renderSubjectFields();
       updateWhatsAppPreview();
       showToast("Form cleared!");
