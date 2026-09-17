@@ -6,11 +6,16 @@
 // Global App State
 const DEFAULT_SUBJECTS = [
   "Maths Notebook",
+  "Maths Textbook",
   "General Awareness",
   "Art & Craft Book",
   "English Notebook",
+  "English Textbook",
   "Hindi Notebook",
-  "EVS"
+  "Hindi Textbook",
+  "Rhymes",
+  "Reader Book",
+  "Poem"
 ];
 
 let subjects = [];
