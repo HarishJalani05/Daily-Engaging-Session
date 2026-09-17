@@ -32,9 +32,12 @@ A lightweight, high-aesthetic web application designed to help school teachers a
 ## 🚀 Local Quickstart
 
 ### Method A: Direct Open
-Simply double-click `index.html` to open the application in Google Chrome or Microsoft Edge.
+Simply visit the website "https://daily-engaging-session.vercel.app/" in your browser.
 
-### Method B: Local Server (Python)
+### Method B: Direct Open
+Simply double-click `index.html` to open the application in any web browser.
+
+### Method C: Local Server (Python)
 ```bash
 # Clone the repository
 git clone https://github.com/HarishJalani05/Daily-Engaging-Session.git
