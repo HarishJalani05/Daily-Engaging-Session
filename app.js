@@ -296,7 +296,8 @@ function updateWhatsAppPreview() {
     }
   }
   const dayVal = dayInput.value.trim();
-  const specialNotesVal = specialNotesInput.value.trim();
+  const celebrationsVal = celebrationsInput ? celebrationsInput.value.trim() : '';
+  const dictationsExamsVal = dictationsExamsInput ? dictationsExamsInput.value.trim() : '';
 
   // Title Line
   const titleDiv = document.createElement('div');
@@ -767,45 +768,59 @@ function insertTextAtCursor(text) {
    UI Event Listeners & Modals
    ========================================================================== */
 function setupEventListeners() {
-  // Input changes & Calendar Date Selection Event
-  dateInput.addEventListener('change', () => {
-    if (dateInput.value) {
-      const selectedDate = new Date(dateInput.value + 'T00:00:00');
-      if (!isNaN(selectedDate.getTime())) {
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        dayInput.value = dayNames[selectedDate.getDay()];
+  const dateInputEl = document.getElementById('dateInput');
+  const dayInputEl = document.getElementById('dayInput');
+  const celebrationsInputEl = document.getElementById('celebrationsInput');
+  const dictationsExamsInputEl = document.getElementById('dictationsExamsInput');
+
+  if (dateInputEl) {
+    dateInputEl.addEventListener('change', () => {
+      if (dateInputEl.value) {
+        const selectedDate = new Date(dateInputEl.value + 'T00:00:00');
+        if (!isNaN(selectedDate.getTime())) {
+          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          if (dayInputEl) dayInputEl.value = dayNames[selectedDate.getDay()];
+        }
       }
-    }
-    updateWhatsAppPreview();
-  });
-  if (celebrationsInput) {
-    celebrationsInput.addEventListener('input', updateWhatsAppPreview);
-    celebrationsInput.addEventListener('focus', () => { activeInputField = celebrationsInput; });
-  }
-  if (dictationsExamsInput) {
-    dictationsExamsInput.addEventListener('input', updateWhatsAppPreview);
-    dictationsExamsInput.addEventListener('focus', () => { activeInputField = dictationsExamsInput; });
+      updateWhatsAppPreview();
+    });
+    dateInputEl.addEventListener('input', updateWhatsAppPreview);
   }
 
-  const clearCelebrationsBtn = document.getElementById('clearCelebrationsBtn');
-  if (clearCelebrationsBtn) {
-    clearCelebrationsBtn.addEventListener('click', () => {
-      celebrationsInput.value = '';
-      celebrationsInput.dispatchEvent(new Event('input'));
+  if (dayInputEl) {
+    dayInputEl.addEventListener('input', updateWhatsAppPreview);
+  }
+
+  if (celebrationsInputEl) {
+    celebrationsInputEl.addEventListener('input', updateWhatsAppPreview);
+    celebrationsInputEl.addEventListener('focus', () => { activeInputField = celebrationsInputEl; });
+  }
+
+  if (dictationsExamsInputEl) {
+    dictationsExamsInputEl.addEventListener('input', updateWhatsAppPreview);
+    dictationsExamsInputEl.addEventListener('focus', () => { activeInputField = dictationsExamsInputEl; });
+  }
+
+  // Clear buttons
+  const clearCelebrationsBtnEl = document.getElementById('clearCelebrationsBtn');
+  if (clearCelebrationsBtnEl) {
+    clearCelebrationsBtnEl.addEventListener('click', () => {
+      if (celebrationsInputEl) celebrationsInputEl.value = '';
+      updateWhatsAppPreview();
       showToast('Cleared celebration entry');
     });
   }
 
-  const clearDictationsExamsBtn = document.getElementById('clearDictationsExamsBtn');
-  if (clearDictationsExamsBtn) {
-    clearDictationsExamsBtn.addEventListener('click', () => {
-      dictationsExamsInput.value = '';
-      dictationsExamsInput.dispatchEvent(new Event('input'));
+  const clearDictationsExamsBtnEl = document.getElementById('clearDictationsExamsBtn');
+  if (clearDictationsExamsBtnEl) {
+    clearDictationsExamsBtnEl.addEventListener('click', () => {
+      if (dictationsExamsInputEl) dictationsExamsInputEl.value = '';
+      updateWhatsAppPreview();
       showToast('Cleared dictation/exam notice');
     });
   }
 
-  // Mic buttons targeting specific input via data-target
+  // Mic buttons
   document.querySelectorAll('.text-area-mic').forEach(micBtn => {
     micBtn.addEventListener('click', () => {
       const targetId = micBtn.getAttribute('data-target');
@@ -816,7 +831,7 @@ function setupEventListeners() {
     });
   });
 
-  // Quick Preset Chips (Target aware)
+  // Preset Chips
   document.querySelectorAll('.chip-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const preset = btn.getAttribute('data-insert');
@@ -830,7 +845,7 @@ function setupEventListeners() {
     });
   });
 
-  // Date Quick Chips (Yesterday, Today, Tomorrow)
+  // Date Quick Chips
   const setQuickDate = (dateObj, activeBtn) => {
     initializeDateAndDay(dateObj);
     updateWhatsAppPreview();
@@ -843,174 +858,206 @@ function setupEventListeners() {
     if (activeBtn) activeBtn.classList.add('active');
   };
 
-  const yesterdayBtn = document.getElementById('yesterdayBtn');
-  if (yesterdayBtn) {
-    yesterdayBtn.addEventListener('click', () => {
+  const yesterdayBtnEl = document.getElementById('yesterdayBtn');
+  if (yesterdayBtnEl) {
+    yesterdayBtnEl.addEventListener('click', () => {
       const d = new Date();
       d.setDate(d.getDate() - 1);
-      setQuickDate(d, yesterdayBtn);
+      setQuickDate(d, yesterdayBtnEl);
       showToast("Set date to Yesterday");
     });
   }
 
-  const todayBtn = document.getElementById('todayBtn');
-  if (todayBtn) {
-    todayBtn.addEventListener('click', () => {
-      setQuickDate(new Date(), todayBtn);
+  const todayBtnEl = document.getElementById('todayBtn');
+  if (todayBtnEl) {
+    todayBtnEl.addEventListener('click', () => {
+      setQuickDate(new Date(), todayBtnEl);
       showToast("Set date to Today");
     });
   }
 
-  const tomorrowBtn = document.getElementById('tomorrowBtn');
-  if (tomorrowBtn) {
-    tomorrowBtn.addEventListener('click', () => {
+  const tomorrowBtnEl = document.getElementById('tomorrowBtn');
+  if (tomorrowBtnEl) {
+    tomorrowBtnEl.addEventListener('click', () => {
       const d = new Date();
       d.setDate(d.getDate() + 1);
-      setQuickDate(d, tomorrowBtn);
+      setQuickDate(d, tomorrowBtnEl);
       showToast("Set date to Tomorrow");
     });
   }
 
-  resetFormBtn.addEventListener('click', () => {
-    if (confirm("Reset today's classwork, homework, and announcement entries?")) {
-      subjects.forEach((_, idx) => {
-        classworkData[`subj_${idx}`] = '';
-        homeworkData[`subj_${idx}`] = '';
-      });
-      if (celebrationsInput) celebrationsInput.value = '';
-      if (dictationsExamsInput) dictationsExamsInput.value = '';
-      renderSubjectFields();
-      updateWhatsAppPreview();
-      showToast("Form cleared!");
-    }
-  });
+  const resetFormBtnEl = document.getElementById('resetFormBtn');
+  if (resetFormBtnEl) {
+    resetFormBtnEl.addEventListener('click', () => {
+      if (confirm("Reset today's classwork, homework, and announcement entries?")) {
+        subjects.forEach((_, idx) => {
+          classworkData[`subj_${idx}`] = '';
+          homeworkData[`subj_${idx}`] = '';
+        });
+        if (celebrationsInputEl) celebrationsInputEl.value = '';
+        if (dictationsExamsInputEl) dictationsExamsInputEl.value = '';
+        renderSubjectFields();
+        updateWhatsAppPreview();
+        showToast("Form cleared!");
+      }
+    });
+  }
 
   // Guided Voice Modal Triggers
-  guidedVoiceBtn.addEventListener('click', startGuidedVoiceWizard);
-  startWizardBannerBtn.addEventListener('click', startGuidedVoiceWizard);
-  closeVoiceModalBtn.addEventListener('click', () => {
-    isWizardRunning = false;
-    if (recognition) recognition.stop();
-    window.speechSynthesis.cancel();
-    voiceModal.classList.add('hidden');
-  });
+  const guidedVoiceBtnEl = document.getElementById('guidedVoiceBtn');
+  if (guidedVoiceBtnEl) guidedVoiceBtnEl.addEventListener('click', startGuidedVoiceWizard);
 
-  wizardSkipBtn.addEventListener('click', () => {
-    if (recognition) recognition.stop();
-    processWizardSpeechResult('kuch nahi');
-  });
+  const startWizardBannerBtnEl = document.getElementById('startWizardBannerBtn');
+  if (startWizardBannerBtnEl) startWizardBannerBtnEl.addEventListener('click', startGuidedVoiceWizard);
 
-  wizardNextBtn.addEventListener('click', () => {
-    if (recognition) recognition.stop();
-  });
+  const closeVoiceModalBtnEl = document.getElementById('closeVoiceModalBtn');
+  if (closeVoiceModalBtnEl) {
+    closeVoiceModalBtnEl.addEventListener('click', () => {
+      isWizardRunning = false;
+      if (recognition) recognition.stop();
+      window.speechSynthesis.cancel();
+      const voiceModalEl = document.getElementById('voiceModal');
+      if (voiceModalEl) voiceModalEl.classList.add('hidden');
+    });
+  }
+
+  const wizardSkipBtnEl = document.getElementById('wizardSkipBtn');
+  if (wizardSkipBtnEl) {
+    wizardSkipBtnEl.addEventListener('click', () => {
+      if (recognition) recognition.stop();
+      processWizardSpeechResult('kuch nahi');
+    });
+  }
+
+  const wizardNextBtnEl = document.getElementById('wizardNextBtn');
+  if (wizardNextBtnEl) {
+    wizardNextBtnEl.addEventListener('click', () => {
+      if (recognition) recognition.stop();
+    });
+  }
 
   // Hindi Keyboard Accordion Toggle
-  toggleHindiKbdBtn.addEventListener('click', () => {
-    hindiKeyboardBody.classList.toggle('collapsed');
-    const isCollapsed = hindiKeyboardBody.classList.contains('collapsed');
-    hindiKbdToggleText.innerText = isCollapsed ? 'Show Keyboard' : 'Hide Keyboard';
-    hindiKbdIcon.setAttribute('data-lucide', isCollapsed ? 'chevron-down' : 'chevron-up');
-    if (window.lucide) lucide.createIcons();
-  });
+  const toggleHindiKbdBtnEl = document.getElementById('toggleHindiKbdBtn');
+  if (toggleHindiKbdBtnEl) {
+    toggleHindiKbdBtnEl.addEventListener('click', () => {
+      const hindiKeyboardBodyEl = document.getElementById('hindiKeyboardBody');
+      const hindiKbdToggleTextEl = document.getElementById('hindiKbdToggleText');
+      const hindiKbdIconEl = document.getElementById('hindiKbdIcon');
+
+      if (hindiKeyboardBodyEl) hindiKeyboardBodyEl.classList.toggle('collapsed');
+      const isCollapsed = hindiKeyboardBodyEl ? hindiKeyboardBodyEl.classList.contains('collapsed') : false;
+      if (hindiKbdToggleTextEl) hindiKbdToggleTextEl.innerText = isCollapsed ? 'Show Keyboard' : 'Hide Keyboard';
+      if (hindiKbdIconEl) hindiKbdIconEl.setAttribute('data-lucide', isCollapsed ? 'chevron-down' : 'chevron-up');
+      if (window.lucide) lucide.createIcons();
+    });
+  }
 
   // WhatsApp Share Action
-  shareWhatsappBtn.addEventListener('click', () => {
-    const text = getFormattedWhatsAppString();
-    const encoded = encodeURIComponent(text);
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encoded}`;
+  const shareWhatsappBtnEl = document.getElementById('shareWhatsappBtn');
+  if (shareWhatsappBtnEl) {
+    shareWhatsappBtnEl.addEventListener('click', () => {
+      const text = getFormattedWhatsAppString();
+      const encoded = encodeURIComponent(text);
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encoded}`;
 
-    // Attempt Web Share API first on mobile devices
-    if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
-      navigator.share({
-        title: "Daily Classroom Update",
-        text: text
-      }).catch(() => {
+      if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        navigator.share({
+          title: "Daily Classroom Update",
+          text: text
+        }).catch(() => {
+          window.open(whatsappUrl, '_blank');
+        });
+      } else {
         window.open(whatsappUrl, '_blank');
-      });
-    } else {
-      window.open(whatsappUrl, '_blank');
-    }
-  });
+      }
+    });
+  }
 
   // Copy Text Action
-  copyTextBtn.addEventListener('click', () => {
-    const text = getFormattedWhatsAppString();
-    navigator.clipboard.writeText(text).then(() => {
-      showToast("📋 Formatted message copied to clipboard!");
-    }).catch(err => {
-      showToast("Copy failed, please copy manually.");
+  const copyTextBtnEl = document.getElementById('copyTextBtn');
+  if (copyTextBtnEl) {
+    copyTextBtnEl.addEventListener('click', () => {
+      const text = getFormattedWhatsAppString();
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("📋 Formatted message copied to clipboard!");
+      }).catch(err => {
+        showToast("Copy failed, please copy manually.");
+      });
     });
-  });
+  }
 
   // Read Aloud Preview Text
-  previewVoiceReadBtn.addEventListener('click', () => {
-    const text = getFormattedWhatsAppString().replace(/\*/g, '');
-    speakPrompt(text);
-  });
-
-  // Clear / Delete Preview Action
-  const clearPreviewAction = () => {
-    subjects.forEach((_, idx) => {
-      classworkData[`subj_${idx}`] = '';
-      homeworkData[`subj_${idx}`] = '';
-    });
-    specialNotesInput.value = '';
-    renderSubjectFields();
-    updateWhatsAppPreview();
-    showToast("🗑️ Cleared text entries!");
-  };
-
-  const clearPreviewBtn = document.getElementById('clearPreviewBtn');
-  if (clearPreviewBtn) clearPreviewBtn.addEventListener('click', clearPreviewAction);
-
-  const clearPreviewHeaderBtn = document.getElementById('clearPreviewHeaderBtn');
-  if (clearPreviewHeaderBtn) clearPreviewHeaderBtn.addEventListener('click', clearPreviewAction);
-
-  // Read Aloud Preview Text
-  if (previewVoiceReadBtn) {
-    previewVoiceReadBtn.addEventListener('click', () => {
+  const previewVoiceReadBtnEl = document.getElementById('previewVoiceReadBtn');
+  if (previewVoiceReadBtnEl) {
+    previewVoiceReadBtnEl.addEventListener('click', () => {
       const text = getFormattedWhatsAppString().replace(/\*/g, '');
       speakPrompt(text);
     });
   }
+}
 
-  // Theme Toggle
-  themeToggleBtn.addEventListener('click', () => {
-    currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    themeIcon.setAttribute('data-lucide', currentTheme === 'light' ? 'moon' : 'sun');
-    if (window.lucide) lucide.createIcons();
+// Clear / Delete Preview Action
+const clearPreviewAction = () => {
+  subjects.forEach((_, idx) => {
+    classworkData[`subj_${idx}`] = '';
+    homeworkData[`subj_${idx}`] = '';
   });
+  specialNotesInput.value = '';
+  renderSubjectFields();
+  updateWhatsAppPreview();
+  showToast("🗑️ Cleared text entries!");
+};
 
-  // Manage Subjects Modal Logic
-  manageSubjectsBtn.addEventListener('click', openSubjectsModal);
-  closeSubjectsModalBtn.addEventListener('click', () => subjectsModal.classList.add('hidden'));
-  saveSubjectsDoneBtn.addEventListener('click', () => subjectsModal.classList.add('hidden'));
+const clearPreviewBtn = document.getElementById('clearPreviewBtn');
+if (clearPreviewBtn) clearPreviewBtn.addEventListener('click', clearPreviewAction);
 
-  addSubjectBtn.addEventListener('click', () => {
-    const val = newSubjectInput.value.trim();
-    if (val) {
-      subjects.push(val);
-      saveSubjects();
-      newSubjectInput.value = '';
-      renderManageSubjectsList();
-      renderSubjectFields();
-      updateWhatsAppPreview();
-      showToast(`Added subject: ${val}`);
-    }
-  });
+const clearPreviewHeaderBtn = document.getElementById('clearPreviewHeaderBtn');
+if (clearPreviewHeaderBtn) clearPreviewHeaderBtn.addEventListener('click', clearPreviewAction);
 
-  restoreDefaultSubjectsBtn.addEventListener('click', () => {
-    if (confirm("Restore default subjects list?")) {
-      subjects = [...DEFAULT_SUBJECTS];
-      saveSubjects();
-      renderManageSubjectsList();
-      renderSubjectFields();
-      updateWhatsAppPreview();
-      showToast("Restored default subjects.");
-    }
+// Read Aloud Preview Text
+if (previewVoiceReadBtn) {
+  previewVoiceReadBtn.addEventListener('click', () => {
+    const text = getFormattedWhatsAppString().replace(/\*/g, '');
+    speakPrompt(text);
   });
 }
+
+// Theme Toggle
+themeToggleBtn.addEventListener('click', () => {
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  themeIcon.setAttribute('data-lucide', currentTheme === 'light' ? 'moon' : 'sun');
+  if (window.lucide) lucide.createIcons();
+});
+
+// Manage Subjects Modal Logic
+manageSubjectsBtn.addEventListener('click', openSubjectsModal);
+closeSubjectsModalBtn.addEventListener('click', () => subjectsModal.classList.add('hidden'));
+saveSubjectsDoneBtn.addEventListener('click', () => subjectsModal.classList.add('hidden'));
+
+addSubjectBtn.addEventListener('click', () => {
+  const val = newSubjectInput.value.trim();
+  if (val) {
+    subjects.push(val);
+    saveSubjects();
+    newSubjectInput.value = '';
+    renderManageSubjectsList();
+    renderSubjectFields();
+    updateWhatsAppPreview();
+    showToast(`Added subject: ${val}`);
+  }
+});
+
+restoreDefaultSubjectsBtn.addEventListener('click', () => {
+  if (confirm("Restore default subjects list?")) {
+    subjects = [...DEFAULT_SUBJECTS];
+    saveSubjects();
+    renderManageSubjectsList();
+    renderSubjectFields();
+    updateWhatsAppPreview();
+    showToast("Restored default subjects.");
+  }
+});
 
 /* Manage Subjects Rendering */
 function openSubjectsModal() {
