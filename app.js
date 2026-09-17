@@ -288,7 +288,7 @@ function setupSpeechRecognition() {
     if (isWizardRunning) {
       wizardSpeechTranscript.innerText = `"${transcript}"`;
     } else if (activeInputField) {
-      activeInputField.value = transcript;
+      activeInputField.value = formatDictatedText(transcript);
       // Dispatch input event to update state
       activeInputField.dispatchEvent(new Event('input'));
     }
@@ -343,6 +343,42 @@ function stopMic() {
   if (isWizardRunning) {
     wizardMicCircle.classList.remove('listening');
   }
+}
+
+/* Format dictated speech into clean classroom range notes (e.g. '1 se 70', '1 to 70', '1270' -> 'Numbers 1-70') */
+function formatDictatedText(text) {
+  if (!text) return text;
+
+  let formatted = text.trim();
+
+  // 1. Convert "se", "say", "to", "2" between two numbers into a dash (-)
+  // e.g. "1 se 70", "1 to 70", "1 say 70" -> "1-70"
+  formatted = formatted.replace(/(\d+)\s*(?:to|se|say|2)\s*(\d+)/gi, '$1-$2');
+
+  // 2. Handle Speech API misinterpreting "1 to XX" as "12XX" (e.g. 1270 -> 1-70, 1250 -> 1-50, 12100 -> 1-100)
+  formatted = formatted.replace(/\b12(\d{1,3})\b/g, (match, p1) => {
+    const val = parseInt(p1, 10);
+    if (val >= 5 && val <= 100) {
+      return `1-${val}`;
+    }
+    return match;
+  });
+
+  // 3. Handle cases where speech engine turns "1 to 70" into "1 270" or "1 2 70"
+  formatted = formatted.replace(/\b(\d+)\s+2?(\d{2,3})\b/g, (match, p1, p2) => {
+    const num = parseInt(p2, 10);
+    if (num >= 10 && num <= 100 && parseInt(p1, 10) < num) {
+      return `${p1}-${num}`;
+    }
+    return match;
+  });
+
+  // 4. Capitalize first letter of string
+  if (formatted.length > 0) {
+    formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  }
+
+  return formatted;
 }
 
 /* Check if teacher said "Kuch nahi", "Skip", or "Nothing" */
@@ -420,7 +456,8 @@ function processWizardSpeechResult(text) {
     showToast(`Skipped ${currentStep.subj} (${currentStep.type.toUpperCase()})`);
   } else {
     if (inputEl) {
-      inputEl.value = text;
+      const formatted = formatDictatedText(text);
+      inputEl.value = formatted;
       inputEl.dispatchEvent(new Event('input'));
     }
     showToast(`Saved for ${currentStep.subj}`);
