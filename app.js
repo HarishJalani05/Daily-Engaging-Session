@@ -15,7 +15,8 @@ const DEFAULT_SUBJECTS = [
   "Hindi Textbook",
   "Rhymes",
   "Reader Book",
-  "Poem"
+  "Poem",
+  "Oral"
 ];
 
 let subjects = [];
