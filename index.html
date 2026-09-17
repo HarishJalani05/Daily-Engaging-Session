@@ -241,9 +241,12 @@
 
           <div class="input-with-mic textarea-mic-wrapper">
             <textarea id="specialNotesInput" rows="3" placeholder="Enter special announcements, celebration details, or dictation alerts..."></textarea>
-            <button class="mic-btn text-area-mic" data-target="specialNotesInput" title="Speak Announcement">
-              <i data-lucide="mic"></i>
-            </button>
+            <div class="input-actions-inside text-area-actions">
+              <button id="clearSpecialNotesBtn" class="clear-field-btn" title="Clear announcement"><i data-lucide="x"></i></button>
+              <button class="mic-btn text-area-mic" data-target="specialNotesInput" title="Speak Announcement">
+                <i data-lucide="mic"></i>
+              </button>
+            </div>
           </div>
         </section>
 
@@ -266,7 +269,7 @@
               <div class="whatsapp-header-strip">
                 <i data-lucide="share-2"></i> Class WhatsApp Group Message
               </div>
-              <pre id="whatsappFormattedText" class="whatsapp-text-content"></pre>
+              <div id="whatsappPreviewContainer" class="whatsapp-text-content"></div>
               <div class="whatsapp-footer-strip">
                 <span id="previewTimestamp">Today at 10:00 AM</span>
                 <i data-lucide="check-check" class="text-whatsapp"></i>

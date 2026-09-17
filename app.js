@@ -185,14 +185,36 @@ function createSubjectRow(subjectName, fieldId, type, initialValue) {
     updateWhatsAppPreview();
   });
 
+  const inputActions = document.createElement('div');
+  inputActions.className = 'input-actions-inside';
+
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'clear-field-btn';
+  clearBtn.title = `Clear ${subjectName} ${type === 'cw' ? 'classwork' : 'homework'}`;
+  clearBtn.innerHTML = `<i data-lucide="x" style="width: 14px; height: 14px;"></i>`;
+  clearBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    input.value = '';
+    if (type === 'cw') classworkData[fieldId] = '';
+    else homeworkData[fieldId] = '';
+    updateWhatsAppPreview();
+    showToast(`Cleared ${subjectName}`);
+  });
+
   const micBtn = document.createElement('button');
   micBtn.className = 'mic-btn';
   micBtn.title = 'Speak topic';
-  micBtn.innerHTML = `<i data-lucide="mic" style="width: 16px; height: 16px;"></i>`;
-  micBtn.addEventListener('click', () => triggerIndividualMic(input, micBtn));
+  micBtn.innerHTML = `<i data-lucide="mic" style="width: 14px; height: 14px;"></i>`;
+  micBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    triggerIndividualMic(input, micBtn);
+  });
+
+  inputActions.appendChild(clearBtn);
+  inputActions.appendChild(micBtn);
 
   inputWrapper.appendChild(input);
-  inputWrapper.appendChild(micBtn);
+  inputWrapper.appendChild(inputActions);
 
   row.appendChild(label);
   row.appendChild(inputWrapper);
@@ -200,14 +222,10 @@ function createSubjectRow(subjectName, fieldId, type, initialValue) {
   return row;
 }
 
-/* ==========================================================================
-   WhatsApp Formatting Engine
-   ========================================================================== */
-function updateWhatsAppPreview() {
+function getFormattedWhatsAppString() {
   const rawDate = dateInput.value.trim();
   let dateFormatted = rawDate;
   
-  // Format YYYY-MM-DD to DD/MM/YYYY for WhatsApp output
   if (rawDate && rawDate.includes('-')) {
     const parts = rawDate.split('-');
     if (parts.length === 3) {
@@ -220,7 +238,6 @@ function updateWhatsAppPreview() {
 
   let message = `*Today's Engaging Session in the classroom:*\n${dateFormatted}\n${dayVal}\n \n`;
 
-  // Filter Classwork items with content
   const activeClasswork = [];
   subjects.forEach((subj, idx) => {
     const val = (classworkData[`subj_${idx}`] || '').trim();
@@ -233,7 +250,6 @@ function updateWhatsAppPreview() {
     message += `*Classwork:*\n${activeClasswork.join('\n')}\n\n`;
   }
 
-  // Filter Homework items with content
   const activeHomework = [];
   subjects.forEach((subj, idx) => {
     const val = (homeworkData[`subj_${idx}`] || '').trim();
@@ -246,12 +262,146 @@ function updateWhatsAppPreview() {
     message += `*Homework:*\n${activeHomework.join('\n')}\n\n`;
   }
 
-  // Add Special Notes / Dictations / Celebrations if present
   if (specialNotesVal) {
     message += `*${specialNotesVal}*`;
   }
 
-  whatsappFormattedText.innerText = message.trim();
+  return message.trim();
+}
+
+function updateWhatsAppPreview() {
+  const container = document.getElementById('whatsappPreviewContainer');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  const rawDate = dateInput.value.trim();
+  let dateFormatted = rawDate;
+  if (rawDate && rawDate.includes('-')) {
+    const parts = rawDate.split('-');
+    if (parts.length === 3) {
+      dateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  }
+  const dayVal = dayInput.value.trim();
+  const specialNotesVal = specialNotesInput.value.trim();
+
+  // Title Line
+  const titleDiv = document.createElement('div');
+  titleDiv.className = 'preview-title-line';
+  titleDiv.innerText = "*Today's Engaging Session in the classroom:*";
+  container.appendChild(titleDiv);
+
+  // Date & Day Line
+  const dateDiv = document.createElement('div');
+  dateDiv.className = 'preview-date-line';
+  dateDiv.innerText = `${dateFormatted}\n${dayVal}`;
+  container.appendChild(dateDiv);
+
+  // Classwork Section
+  const hasClasswork = subjects.some((_, idx) => (classworkData[`subj_${idx}`] || '').trim());
+  if (hasClasswork) {
+    const cwHeader = document.createElement('div');
+    cwHeader.className = 'preview-section-title';
+    cwHeader.innerText = '*Classwork:*';
+    container.appendChild(cwHeader);
+
+    subjects.forEach((subj, idx) => {
+      const fieldId = `subj_${idx}`;
+      const val = (classworkData[fieldId] || '').trim();
+      if (val) {
+        const line = document.createElement('div');
+        line.className = 'preview-subject-line';
+        
+        const textSpan = document.createElement('span');
+        textSpan.className = 'preview-subject-text';
+        textSpan.innerText = `* ${subj}: ${val}`;
+        
+        const delBtn = document.createElement('button');
+        delBtn.className = 'preview-line-delete-btn';
+        delBtn.title = `Delete ${subj} Classwork from preview`;
+        delBtn.innerHTML = `<i data-lucide="x" style="width: 13px; height: 13px;"></i>`;
+        delBtn.addEventListener('click', () => {
+          classworkData[fieldId] = '';
+          const inputEl = document.getElementById(`cw_${fieldId}`);
+          if (inputEl) inputEl.value = '';
+          updateWhatsAppPreview();
+          showToast(`Deleted ${subj} Classwork`);
+        });
+
+        line.appendChild(textSpan);
+        line.appendChild(delBtn);
+        container.appendChild(line);
+      }
+    });
+  }
+
+  // Homework Section
+  const hasHomework = subjects.some((_, idx) => (homeworkData[`subj_${idx}`] || '').trim());
+  if (hasHomework) {
+    const hwHeader = document.createElement('div');
+    hwHeader.className = 'preview-section-title';
+    hwHeader.innerText = '*Homework:*';
+    container.appendChild(hwHeader);
+
+    subjects.forEach((subj, idx) => {
+      const fieldId = `subj_${idx}`;
+      const val = (homeworkData[fieldId] || '').trim();
+      if (val) {
+        const line = document.createElement('div');
+        line.className = 'preview-subject-line';
+        
+        const textSpan = document.createElement('span');
+        textSpan.className = 'preview-subject-text';
+        textSpan.innerText = `* ${subj}: ${val}`;
+        
+        const delBtn = document.createElement('button');
+        delBtn.className = 'preview-line-delete-btn';
+        delBtn.title = `Delete ${subj} Homework from preview`;
+        delBtn.innerHTML = `<i data-lucide="x" style="width: 13px; height: 13px;"></i>`;
+        delBtn.addEventListener('click', () => {
+          homeworkData[fieldId] = '';
+          const inputEl = document.getElementById(`hw_${fieldId}`);
+          if (inputEl) inputEl.value = '';
+          updateWhatsAppPreview();
+          showToast(`Deleted ${subj} Homework`);
+        });
+
+        line.appendChild(textSpan);
+        line.appendChild(delBtn);
+        container.appendChild(line);
+      }
+    });
+  }
+
+  // Special Notes Section
+  if (specialNotesVal) {
+    const notesDiv = document.createElement('div');
+    notesDiv.className = 'preview-subject-line';
+    notesDiv.style.marginTop = '0.5rem';
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'preview-subject-text';
+    textSpan.innerText = `*${specialNotesVal}*`;
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'preview-line-delete-btn';
+    delBtn.title = 'Delete announcement from preview';
+    delBtn.innerHTML = `<i data-lucide="x" style="width: 13px; height: 13px;"></i>`;
+    delBtn.addEventListener('click', () => {
+      specialNotesInput.value = '';
+      updateWhatsAppPreview();
+      showToast('Deleted announcement');
+    });
+
+    notesDiv.appendChild(textSpan);
+    notesDiv.appendChild(delBtn);
+    container.appendChild(notesDiv);
+  }
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
 }
 
 /* ==========================================================================
@@ -554,10 +704,19 @@ function setupEventListeners() {
   specialNotesInput.addEventListener('input', updateWhatsAppPreview);
   specialNotesInput.addEventListener('focus', () => { activeInputField = specialNotesInput; });
 
-  // Special Notes Mic Button
+  // Special Notes Mic & Clear Buttons
   const specialMicBtn = document.querySelector('.text-area-mic');
   if (specialMicBtn) {
     specialMicBtn.addEventListener('click', () => triggerIndividualMic(specialNotesInput, specialMicBtn));
+  }
+
+  const clearSpecialNotesBtn = document.getElementById('clearSpecialNotesBtn');
+  if (clearSpecialNotesBtn) {
+    clearSpecialNotesBtn.addEventListener('click', () => {
+      specialNotesInput.value = '';
+      specialNotesInput.dispatchEvent(new Event('input'));
+      showToast('Cleared special announcement');
+    });
   }
 
   // Quick Preset Chips
@@ -630,7 +789,7 @@ function setupEventListeners() {
 
   // WhatsApp Share Action
   shareWhatsappBtn.addEventListener('click', () => {
-    const text = whatsappFormattedText.innerText;
+    const text = getFormattedWhatsAppString();
     const encoded = encodeURIComponent(text);
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encoded}`;
     
@@ -649,13 +808,37 @@ function setupEventListeners() {
 
   // Copy Text Action
   copyTextBtn.addEventListener('click', () => {
-    const text = whatsappFormattedText.innerText;
+    const text = getFormattedWhatsAppString();
     navigator.clipboard.writeText(text).then(() => {
       showToast("📋 Formatted message copied to clipboard!");
     }).catch(err => {
       showToast("Copy failed, please copy manually.");
     });
   });
+
+  // Read Aloud Preview Text
+  previewVoiceReadBtn.addEventListener('click', () => {
+    const text = getFormattedWhatsAppString().replace(/\*/g, '');
+    speakPrompt(text);
+  });
+
+  // Clear / Delete Preview Action
+  const clearPreviewAction = () => {
+    subjects.forEach((_, idx) => {
+      classworkData[`subj_${idx}`] = '';
+      homeworkData[`subj_${idx}`] = '';
+    });
+    specialNotesInput.value = '';
+    renderSubjectFields();
+    updateWhatsAppPreview();
+    showToast("🗑️ Cleared text entries!");
+  };
+
+  const clearPreviewBtn = document.getElementById('clearPreviewBtn');
+  if (clearPreviewBtn) clearPreviewBtn.addEventListener('click', clearPreviewAction);
+
+  const clearPreviewHeaderBtn = document.getElementById('clearPreviewHeaderBtn');
+  if (clearPreviewHeaderBtn) clearPreviewHeaderBtn.addEventListener('click', clearPreviewAction);
 
   // Read Aloud Preview Text
   previewVoiceReadBtn.addEventListener('click', () => {
